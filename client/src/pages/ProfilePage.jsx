@@ -123,7 +123,7 @@ const ProfilePage = () => {
                 assets.avatar_icon
               }
               alt="Profile Preview"
-              className="w-12 h-12 rounded-full object-cover"
+              className="w-12 h-12 rounded-full object-cover object-[center_25%]"
             />
 
             <span>Upload profile image</span>
@@ -158,7 +158,6 @@ const ProfilePage = () => {
             {loading ? "Saving..." : "Save"}
           </button>
         </form>
-
         {/* Large Profile Image */}
         <img
           src={
@@ -167,7 +166,7 @@ const ProfilePage = () => {
             assets.logo_icon
           }
           alt="Profile"
-          className="w-44 h-44 object-cover rounded-full mx-10 max-sm:mt-10"
+          className="w-44 h-44 object-cover object-[center_25%] mx-10 max-sm:mt-10 rounded-full"
         />
       </div>
     </div>
