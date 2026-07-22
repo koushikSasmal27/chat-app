@@ -21,7 +21,9 @@ import pic3 from './pic3.png'
 import pic4 from './pic4.png'
 import img1 from './img1.jpg'
 import img2 from './img2.jpg'
-
+import timeLog from './mylogo.png'
+import headLogo from './headLogo.png'
+import bigLogo from './bigLogo.png'
 const assets = {
     avatar_icon,
     gallery_icon,
@@ -35,7 +37,10 @@ const assets = {
     arrow_icon,
     code,
     bgImage,
-    profile_martin
+    profile_martin,
+    timeLog,
+    headLogo,
+    bigLogo
 }
 
 export default assets;

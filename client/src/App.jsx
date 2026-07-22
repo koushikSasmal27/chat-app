@@ -9,31 +9,28 @@ import ProfilePage from './pages/ProfilePage'
 import { AuthContext } from '../context/AuthContext'
 
 const App = () => {
-
   const { authUser } = useContext(AuthContext)
 
   return (
-    <div className="bg-[url('/bgImage.svg')] bg-contain">
+    <div className="min-h-screen bg-[url('/bg.png')] bg-cover bg-center bg-no-repeat">
 
       <Toaster />
 
       <Routes>
-
         <Route
-          path='/'
-          element={authUser ? <HomePage /> : <Navigate to={"/login"} />}
+          path="/"
+          element={authUser ? <HomePage /> : <Navigate to="/login" />}
         />
 
         <Route
-          path='/login'
-          element={!authUser ? <LoginPage /> : <Navigate to={"/"} />}
+          path="/login"
+          element={!authUser ? <LoginPage /> : <Navigate to="/" />}
         />
 
         <Route
-          path='/profile'
-          element={authUser ? <ProfilePage /> : <Navigate to={"/login"} />}
+          path="/profile"
+          element={authUser ? <ProfilePage /> : <Navigate to="/login" />}
         />
-
       </Routes>
 
     </div>

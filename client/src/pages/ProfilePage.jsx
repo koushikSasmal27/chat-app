@@ -1,105 +1,177 @@
-import React, { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import assets from '../assets/assets'
-import { useContext } from 'react'
-import { AuthContext } from '../../context/AuthContext'
+import React, { useContext, useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import assets from "../assets/assets";
+import { AuthContext } from "../../context/AuthContext";
+
 const ProfilePage = () => {
+  const { authUser, updateProfile } = useContext(AuthContext);
 
-    const { authUser, updateProfile } = useContext(AuthContext)
+  const navigate = useNavigate();
 
-    const [selectedImage, setSelectedImage] = useState(null)
-    const navigate = useNavigate()
-    const [name, setName] = useState(authUser.fullName)
-    const [bio, setBio] = useState(authUser.bio)
-    const handleSubmit = async (e) => {
-        e.preventDefault();
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [previewImage, setPreviewImage] = useState(null);
 
-        // If no image selected → only update name & bio
-        if (!selectedImage) {
-            await updateProfile({ fullName: name, bio });
-            navigate('/');
-            return;
-        }
+  const [name, setName] = useState(authUser?.fullName || "");
+  const [bio, setBio] = useState(authUser?.bio || "");
 
-        // If image is selected → convert to base64
-        const reader = new FileReader();
-        reader.readAsDataURL(selectedImage);
+  const [loading, setLoading] = useState(false);
 
-        reader.onload = async () => {
-            const base64Image = reader.result;
+  // Create preview URL for selected image
+  useEffect(() => {
+    if (!selectedImage) {
+      setPreviewImage(null);
+      return;
+    }
 
-            await updateProfile({
-                profilePic: base64Image,
-                fullName: name,
-                bio
-            });
+    const imageUrl = URL.createObjectURL(selectedImage);
 
-            navigate('/');
-        };
+    setPreviewImage(imageUrl);
+
+    // Cleanup object URL
+    return () => {
+      URL.revokeObjectURL(imageUrl);
     };
-    return (
-        <div className="min-h-screen bg-cover bg-no-repeat flex items-center justify-center">
-            <div className="w-5/6 max-w-2xl backdrop-blur-2xl text-gray-300 border-2 border-gray-600 flex items-center justify-between max-sm:flex-col-reverse rounded-lg">
+  }, [selectedImage]);
 
-                <form onSubmit={handleSubmit} className="flex flex-col gap-5 p-10 flex-1">
-                    <h3 className="text-lg">Profile details</h3>
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
 
-                    <label htmlFor="avatar" className="flex items-center gap-3 cursor-pointer">
-                        <input
-                            onChange={(e) => setSelectedImage(e.target.files[0])}
-                            type="file"
-                            id="avatar"
-                            accept=".png, .jpg, .jpeg"
-                            hidden
-                        />
+    if (!file) return;
 
-                        <img
-                            src={
-                                selectedImage
-                                    ? URL.createObjectURL(selectedImage)
-                                    : assets.avatar_icon
-                            }
-                            alt=""
-                            className={`w-12 h-12 ${selectedImage ? 'rounded-full' : ''}`}
-                        />
+    // Validate file type
+    if (!file.type.startsWith("image/")) {
+      alert("Please select a valid image file");
+      return;
+    }
 
-                        upload profile image
-                    </label>
+    // Validate file size - maximum 5MB
+    if (file.size > 5 * 1024 * 1024) {
+      alert("Image size should be less than 5MB");
+      return;
+    }
 
-                    <input
-                        onChange={(e) => setName(e.target.value)}
-                        value={name}
-                        type="text"
-                        required
-                        placeholder="Your name"
-                        className="p-2 border border-gray-500 rounded-md focus:outline-none focus:ring-2 focus:ring-violet-500"
-                    />
+    setSelectedImage(file);
+  };
 
-                    <textarea
-                        onChange={(e) => setBio(e.target.value)}
-                        value={bio}
-                        placeholder="Write profile bio"
-                        required
-                        className="p-2 border border-gray-500 rounded-md focus:outline-none focus:ring-2 focus:ring-violet-500"
-                        rows={4}
-                    ></textarea>
+  const handleSubmit = async (e) => {
+    e.preventDefault();
 
-                    <button
-                        type="submit"
-                        className="bg-gradient-to-r from-purple-400 to-violet-600 text-white p-2 rounded-full text-lg cursor-pointer"
-                    >
-                        Save
-                    </button>
-                </form>
+    try {
+      setLoading(true);
 
-                <img
-                    className={`max-w-44 aspect-square rounded-full mx-10 max-sm:mt-10 ${selectedImage && 'rounded-full'}`}
-                    src={ authUser?.profilePic||assets.logo_icon}
-                    alt=""
-                />
-            </div>
-        </div>
-    )
-}
+      // If no new image is selected
+      if (!selectedImage) {
+        await updateProfile({
+          fullName: name,
+          bio,
+        });
 
-export default ProfilePage
+        navigate("/");
+        return;
+      }
+
+      // Convert image to Base64
+      const reader = new FileReader();
+
+      reader.readAsDataURL(selectedImage);
+
+      reader.onload = async () => {
+        await updateProfile({
+          profilePic: reader.result,
+          fullName: name,
+          bio,
+        });
+
+        navigate("/");
+      };
+    } catch (error) {
+      console.error("Profile update error:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-cover bg-no-repeat flex items-center justify-center">
+      <div className="w-5/6 max-w-2xl backdrop-blur-2xl text-gray-300 border-2 border-gray-600 flex items-center justify-between max-sm:flex-col-reverse rounded-lg">
+
+        {/* Profile Form */}
+        <form
+          onSubmit={handleSubmit}
+          className="flex flex-col gap-5 p-10 flex-1"
+        >
+          <h3 className="text-lg">Profile Details</h3>
+
+          {/* Profile Image Upload */}
+          <label
+            htmlFor="avatar"
+            className="flex items-center gap-3 cursor-pointer"
+          >
+            <input
+              type="file"
+              id="avatar"
+              accept="image/png, image/jpeg, image/jpg"
+              hidden
+              onChange={handleImageChange}
+            />
+
+            {/* Small Image */}
+            <img
+              src={
+                previewImage ||
+                authUser?.profilePic ||
+                assets.avatar_icon
+              }
+              alt="Profile Preview"
+              className="w-12 h-12 rounded-full object-cover"
+            />
+
+            <span>Upload profile image</span>
+          </label>
+
+          {/* Name Input */}
+          <input
+            type="text"
+            required
+            value={name}
+            placeholder="Your name"
+            onChange={(e) => setName(e.target.value)}
+            className="p-2 border border-gray-500 rounded-md focus:outline-none focus:ring-2 focus:ring-violet-500"
+          />
+
+          {/* Bio Input */}
+          <textarea
+            required
+            rows={4}
+            value={bio}
+            placeholder="Write profile bio"
+            onChange={(e) => setBio(e.target.value)}
+            className="p-2 border border-gray-500 rounded-md focus:outline-none focus:ring-2 focus:ring-violet-500"
+          />
+
+          {/* Save Button */}
+          <button
+            type="submit"
+            disabled={loading}
+            className="bg-gradient-to-r from-purple-400 to-violet-600 text-white p-2 rounded-full text-lg cursor-pointer disabled:opacity-50"
+          >
+            {loading ? "Saving..." : "Save"}
+          </button>
+        </form>
+
+        {/* Large Profile Image */}
+        <img
+          src={
+            previewImage ||
+            authUser?.profilePic ||
+            assets.logo_icon
+          }
+          alt="Profile"
+          className="w-44 h-44 object-cover rounded-full mx-10 max-sm:mt-10"
+        />
+      </div>
+    </div>
+  );
+};
+
+export default ProfilePage;
